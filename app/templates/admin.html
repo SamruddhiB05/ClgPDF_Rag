@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section-heading">
+  <p class="eyebrow">Admin</p>
+  <h1>Upload college PDFs for the student Q&A system.</h1>
+  <p class="subtle">This first version indexes PDFs. Image notices can be added later through OCR before the same indexing step.</p>
+</section>
+
+<section class="admin-grid">
+  <form class="panel" method="post" enctype="multipart/form-data" action="{{ url_for('admin') }}">
+    <h2>Add PDF</h2>
+    <label for="password">Admin password</label>
+    <input id="password" name="password" type="password" placeholder="Default: admin123" required>
+
+    <label for="document">PDF document</label>
+    <input id="document" name="document" type="file" accept="application/pdf" required>
+
+    <button type="submit">Upload and index</button>
+  </form>
+
+  {% if has_sample %}
+    <form class="panel" method="post" action="{{ url_for('ingest_sample') }}">
+      <h2>Use sample PDF</h2>
+      <p class="subtle">Index the existing <strong>sample_1.pdf</strong> file from this project folder.</p>
+      <label for="sample-password">Admin password</label>
+      <input id="sample-password" name="password" type="password" placeholder="Default: admin123" required>
+      <button type="submit">Index sample_1.pdf</button>
+    </form>
+  {% endif %}
+</section>
+
+<section class="documents">
+  <h2>Indexed documents</h2>
+  {% if documents %}
+    <div class="document-list">
+      {% for document in documents %}
+        <div class="document-row">
+          <div>
+            <strong>{{ document.filename }}</strong>
+            <span>{{ document.chunk_count }} chunks across {{ document.page_count }} pages</span>
+          </div>
+          <form method="post" action="{{ url_for('remove_document', document_id=document.document_id) }}">
+            <input name="password" type="password" placeholder="Password" required>
+            <button type="submit">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">No PDFs indexed yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

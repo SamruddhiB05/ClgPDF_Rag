@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">For students</p>
+    <h1>Chat with college notices, fest circulars, and test schedules.</h1>
+    <p class="subtle">The assistant retrieves answers from admin-uploaded PDFs and shows the source pages.</p>
+  </div>
+</section>
+
+<section class="ask-panel">
+  <div id="chat-log" class="chat-log" aria-live="polite">
+    <div class="bubble assistant">
+      Hi. Ask me about upcoming events, tests, sports, fest schedules, or notices from the uploaded PDFs.
+    </div>
+    {% if result %}
+      <div class="bubble user">{{ query }}</div>
+      <div class="bubble assistant">{{ result.answer }}</div>
+    {% endif %}
+  </div>
+
+  <form id="chat-form" class="ask-form">
+    <label for="message">Your question</label>
+    <div class="query-row">
+      <input id="message" name="message" value="{{ query }}" placeholder="Example: Which events are coming up?" autocomplete="off" autofocus>
+      <button type="submit">Send</button>
+    </div>
+  </form>
+
+  <div id="source-panel" class="sources-panel" hidden>
+    <h2>Sources</h2>
+    <div id="sources" class="sources"></div>
+  </div>
+</section>
+
+<script>
+  const form = document.querySelector("#chat-form");
+  const input = document.querySelector("#message");
+  const chatLog = document.querySelector("#chat-log");
+  const sourcePanel = document.querySelector("#source-panel");
+  const sources = document.querySelector("#sources");
+  const history = [];
+
+  function addBubble(role, text) {
+    const bubble = document.createElement("div");
+    bubble.className = `bubble ${role}`;
+    bubble.textContent = text;
+    chatLog.appendChild(bubble);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return bubble;
+  }
+
+  function renderSources(items) {
+    sources.innerHTML = "";
+    sourcePanel.hidden = !items.length;
+
+    items.forEach((item) => {
+      const source = document.createElement("div");
+      source.className = "source";
+      source.innerHTML = `
+        <strong></strong>
+        <span></span>
+        <p></p>
+      `;
+      source.querySelector("strong").textContent = item.filename;
+      source.querySelector("span").textContent = `Page ${item.page}`;
+      source.querySelector("p").textContent = item.text;
+      sources.appendChild(source);
+    });
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const message = input.value.trim();
+    if (!message) return;
+
+    input.value = "";
+    addBubble("user", message);
+    const waiting = addBubble("assistant", "Searching the uploaded PDFs...");
+
+    try {
+      const response = await fetch("{{ url_for('chat') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, history }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to answer.");
+
+      waiting.textContent = data.answer;
+      history.push({ role: "user", content: message });
+      history.push({ role: "assistant", content: data.answer });
+      renderSources(data.sources || []);
+    } catch (error) {
+      waiting.textContent = error.message;
+    }
+  });
+</script>
+{% endblock %}
