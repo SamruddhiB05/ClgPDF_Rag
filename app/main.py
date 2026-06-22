@@ -27,6 +27,10 @@ def create_app():
         result = answer_question(query) if query else None
         return render_template("index.html", query=query, result=result)
 
+    @app.get("/healthz")
+    def healthz():
+        return {"status": "ok"}
+
     @app.post("/chat")
     def chat():
         data = request.get_json(silent=True) or {}
