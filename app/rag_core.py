@@ -180,7 +180,10 @@ def ingest_pdf(source_path, original_filename=None):
     new_chunks = []
 
     for page_number, page in enumerate(reader.pages, start=1):
-        text = page.extract_text() or ""
+        try:
+            text = page.extract_text() or ""
+        except Exception:
+            text = ""
         for index, chunk in enumerate(chunk_text(text), start=1):
             new_chunks.append(
                 {

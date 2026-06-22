@@ -3,7 +3,7 @@ services:
     name: campus-rag-notice-hub
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app.main:app
+    startCommand: gunicorn --timeout 240 app.main:app
     envVars:
       - key: LLM_PROVIDER
         value: gemini

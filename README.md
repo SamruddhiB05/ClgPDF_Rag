@@ -77,7 +77,7 @@ Render settings:
 
 ```text
 Build Command: pip install -r requirements.txt
-Start Command: gunicorn app.main:app
+Start Command: gunicorn --timeout 240 app.main:app
 ```
 
 Environment variables to add on the hosting platform:
